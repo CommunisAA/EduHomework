@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+    <!--filter-->
+    <bean id="shiroFilter" class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+        <!-- 指定跳转到校验不成功的路径 ，不指定会跳转上一次访问菜单页面 -->
+        <!-- <property name="unauthorizedUrl" value="/undo"></property> -->
+        <!-- 指定依赖的securityManager对象 -->
+        <property name="securityManager" ref="securityManager"/>
+        <!-- 指定 登录请求的路径 -->
+        <property name="loginUrl" value="/sms/all/login.do"/>
+        <!-- 登录成功跳转的路径 -->
+        <property name="successUrl" value="/sms/all/index"/>
+        <!-- 用于指定执行的过滤器链 ，配置多个过滤器连接对的url -->
+        <property name="filterChainDefinitions">
+            <value>
+                <!-- 指定url与过滤器的关系 -->
+                <!-- 所有的路径都要拦截 -->
+                /sms/all/login = anon
+                /sms/all/login.do = anon
+<!--                /sms/all/logout.do = logout-->
+                /** = anon
+
+            </value>
+        </property>
+    </bean>
+
+    <!-- 2.指定securityManager的对象 -->
+    <bean name="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+
+        <property name="realm" ref="myRealm"/>
+
+    </bean>
+
+    <!-- 3.创建一个Realm对象 -->
+    <bean name="myRealm" class="com.sms.realm.UserRealm"/>
+
+    <!-- 4.Spring容器对shiro生命周期的管理 ,基于注解权限拦截需要配置-->
+    <bean name="lifecycleBeanPostProcessor" class="org.apache.shiro.spring.LifecycleBeanPostProcessor"/>
+    <bean class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator"
+          depends-on="lifecycleBeanPostProcessor"/>
+</beans>

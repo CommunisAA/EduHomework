@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xmlns:task="http://www.springframework.org/schema/task"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd http://www.springframework.org/schema/task http://www.springframework.org/schema/task/spring-task-3.2.xsd">
+    <!-- 配置自动扫描的包 -->
+    <context:component-scan base-package="com.sms"/>
+    <!-- 自动扫描控制器 -->
+    <context:annotation-config/>
+    <!-- 激活基于注解的配置 -->
+    <mvc:annotation-driven/>
+    <!-- 静态资源映射器 -->
+    <mvc:resources mapping="/views/**" location="/WEB-INF/views/"/>
+    <mvc:resources mapping="/moban/**" location="/moban/"/>
+    <!-- 视图渲染 -->
+    <bean id="internalResourceViewResolver"
+          class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="prefix" value="/WEB-INF/views/"/>
+        <property name="suffix" value=".jsp"/>
+    </bean>
+    <!-- MyBatis 动态扫描  -->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="com.sms.mapper"/>
+    </bean>
+    <!-- 读取数据库配置文件 -->
+    <context:property-placeholder location="classpath*:*.properties"/>
+    <!-- 数据库连接池 -->
+    <bean id="dataSource" class="org.apache.commons.dbcp2.BasicDataSource" destroy-method="close">
+        <property name="driverClassName" value="${jdbc.driver}"/>
+        <property name="url" value="${jdbc.url}"/>
+        <property name="username" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+    </bean>
+    <bean id="sqlSessionFactory" class="com.baomidou.mybatisplus.extension.spring.MybatisSqlSessionFactoryBean">
+        <!-- 配置数据源 -->
+        <property name="dataSource" ref="dataSource"/>
+        <!-- 配置分页插件 -->
+        <property name="plugins">
+            <array>
+                <bean class="com.baomidou.mybatisplus.extension.plugins.PaginationInterceptor"/>
+            </array>
+        </property>
+    </bean>
+    <!-- 导入spring-redis配置文件  -->
+    <!-- 27行已导入 -->
+    <!-- redis数据源  -->
+    <bean id="poolConfig" class="redis.clients.jedis.JedisPoolConfig">
+        <!-- 最大空闲数 -->
+        <property name="maxIdle" value="${redis.maxIdle}"/>
+        <!-- 最大连接数 -->
+        <property name="maxTotal" value="${redis.maxTotal}"/>
+        <!-- 最大等待时间 -->
+        <property name="maxWaitMillis" value="${redis.maxWaitMillis}"/>
+        <!-- 连接超时时是否阻塞，false时报异常，true阻塞到直到超时，默认true -->
+        <property name="blockWhenExhausted" value="${redis.blockWhenExhausted}"/>
+        <!-- 返回连接时，检测连接是否成功 -->
+        <property name="testOnBorrow" value="${redis.testOnBorrow}"/>
+    </bean>
+    <!-- Spring整合Jedis -->
+    <bean id="jedisConnectionFactory" class="org.springframework.data.redis.connection.jedis.JedisConnectionFactory">
+        <!-- 指定连接地址 -->
+        <property name="hostName" value="127.0.0.1"/>
+        <!-- 指定端口号 -->
+        <property name="port" value="6379"/>
+        <!-- 自定义连接池的配置 -->
+        <property name="poolConfig" ref="poolConfig"/>
+    </bean>
+    <!-- RedisTempLate -->
+    <bean class="org.springframework.data.redis.core.RedisTemplate">
+        <property name="connectionFactory" ref="jedisConnectionFactory"/>
+    </bean>
+    <mvc:interceptors>
+        <mvc:interceptor>
+            <!-- 先匹配所有路径，然后排除不需要检查的路径 -->
+            <mvc:mapping path="/**"/>
+            <!-- 与登录相关的请求 -->
+            <mvc:exclude-mapping path="/**/login"/>
+            <mvc:exclude-mapping path="/**/login.do"/>
+            <!-- 网站的登录路径是 "http://localhost:8080/cultivate-job/"
+            	路径path="/"表示的路径就是网站入口路径,
+            	也就是说拦截器只方向两种请求:
+            	1. 错误页面,直接访问jsp页面,这些页面不在WEB-INF目录下,可以直接访问
+            	2. 网站入口请求,检查到没有登录,会重定向到网站入口路径,再被定向到登录页面
+            -->
+            <!--<mvc:exclude-mapping path="/"/>-->
+            <!-- 以下是静态资源 -->
+            <mvc:exclude-mapping path="/moban/**"/>
+            <!-- 用户是否已经登录的检查bean -->
+            <bean class="com.sms.interceptor.LoginInterceptor"/>
+        </mvc:interceptor>
+    </mvc:interceptors>
+    <task:annotation-driven/>
+    <bean class="com.sms.util.RedisUtil"/>
+    <bean class="com.sms.util.TaxUtil"/>
+</beans>

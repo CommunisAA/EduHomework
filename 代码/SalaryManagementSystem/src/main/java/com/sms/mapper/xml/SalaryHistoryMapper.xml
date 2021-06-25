@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.sms.mapper.SalaryHistoryMapper">
+
+    <!-- 通用查询映射结果 -->
+    <resultMap id="BaseResultMap" type="com.sms.entity.SalaryHistory">
+        <result column="Id" property="id" />
+        <result column="PostSalary" property="postsalary" />
+        <result column="ScaleSalary" property="scalesalary" />
+        <result column="Allowance" property="allowance" />
+        <result column="PerformanceSalary" property="performancesalary" />
+        <result column="TotalSalary" property="totalsalary" />
+        <result column="Tax" property="tax" />
+        <result column="Salary" property="salary" />
+        <result column="Date" property="date" />
+    </resultMap>
+
+</mapper>
